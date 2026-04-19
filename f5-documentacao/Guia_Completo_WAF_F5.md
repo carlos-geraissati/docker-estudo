@@ -15,6 +15,7 @@
 11. [Automação do WAF com Python e Ansible](#automação-do-waf-com-python-e-ansible)
 12. [Boas Práticas e Checklist de Produção](#boas-práticas-e-checklist-de-produção)
 13. [Troubleshooting WAF](#troubleshooting-waf)
+14. [Conclusão e Recomendações](#conclusão-e-recomendações)
 
 ---
 
@@ -1250,7 +1251,55 @@ du -sh /var/log/asm*
 
 ---
 
-## Referências
+## Conclusão e Recomendações
+
+### Para equipes iniciando com WAF no F5:
+
+1. **Comece em modo Transparent** — nunca ative blocking sem período de observação (mínimo 2-4 semanas)
+2. **Use o template Rapid Deployment** — menor risco de falsos positivos no início
+3. **Invista no tuning** — falsos positivos mal tratados levam a desligamento do WAF pela equipe
+4. **Automatize desde o início** — backups de policies, relatórios de violações e alertas via Python/Ansible
+5. **Monitore os logs diariamente** — especialmente nas primeiras semanas após ativar blocking
+
+### Arquitetura recomendada:
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   F5 BIG-IP     │     │   SIEM/Splunk    │     │   Grafana       │
+│   (WAF/ASM)     │────▶│   (Logs WAF)     │────▶│  (Dashboards)   │
+│                 │     │                  │     │                 │
+└────────┬────────┘     └──────────────────┘     └─────────────────┘
+         │
+         ▼
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  Ansible Tower  │     │  Python Scripts   │     │  OWASP ZAP      │
+│  (Gerenciar     │────▶│  (Tuning +        │────▶│  (Validação     │
+│   Policies)     │     │   Relatórios)     │     │   Segurança)    │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+```
+
+### Resultado esperado com WAF bem implementado:
+
+| Métrica | Sem WAF | Com WAF (após tuning) |
+|---------|---------|----------------------|
+| Ataques SQL Injection bloqueados | 0% | 99.9% |
+| Ataques XSS bloqueados | 0% | 99.5% |
+| Visibilidade de tentativas de ataque | Nenhuma | Completa |
+| Conformidade PCI-DSS (Requisito 6.6) | Não atende | Atende |
+| Tempo médio de detecção de ataque | Dias/Semanas | Segundos |
+| Falsos positivos (após tuning) | N/A | < 0.1% |
+
+### Próximos passos sugeridos:
+
+1. Configurar lab com F5 VE (Virtual Edition) e ativar licença ASM de trial
+2. Implementar WAF em modo Transparent no ambiente de homologação
+3. Analisar logs por 2-4 semanas e tratar falsos positivos
+4. Integrar logs do WAF com SIEM (Splunk/ELK) para visibilidade centralizada
+5. Ativar modo Blocking gradualmente, começando pelas violações de alta confiança
+6. Validar proteção com ferramentas de pentest (OWASP ZAP, Burp Suite)
+7. Automatizar backup de policies e relatórios com Python/Ansible
+
+### Referências:
 
 - [F5 ASM Official Documentation](https://techdocs.f5.com/en-us/bigip-15-1-0/big-ip-asm-getting-started.html)
 - [F5 iControl REST API Reference](https://clouddocs.f5.com/api/icontrol-rest/)
