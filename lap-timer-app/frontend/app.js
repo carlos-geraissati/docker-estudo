@@ -83,7 +83,7 @@ async function loadEvents() {
                     <span class="event-meta-item"><span class="icon">&#128197;</span> ${formatDate(ev.startDate)}</span>
                     ${ev.location ? `<span class="event-meta-item"><span class="icon">&#128205;</span> ${escHtml(ev.location.name)}</span>` : ''}
                     ${ev.organization ? `<span class="event-meta-item"><span class="icon">&#127970;</span> ${escHtml(ev.organization.name || '')}</span>` : ''}
-                    ${ev.location && ev.location.length > 0 ? `<span class="event-meta-item"><span class="icon">&#128207;</span> ${ev.location.lengthLabel}</span>` : ''}
+                    ${ev.location && ev.location.length > 0 ? `<span class="event-meta-item"><span class="icon">&#128207;</span> ${escHtml(ev.location.lengthLabel)}</span>` : ''}
                 </div>
             </div>
         `).join('');
@@ -120,7 +120,7 @@ async function loadEvent(eventId) {
                 <span class="sport-badge ${sportClass(ev.sport)}">${escHtml(ev.sport)}</span>
                 <span>&#128197; ${formatDate(ev.startDate)}</span>
                 ${ev.location ? `<span>&#128205; ${escHtml(ev.location.name)} ${ev.location.country ? '(' + escHtml(ev.location.country.name) + ')' : ''}</span>` : ''}
-                ${ev.location && ev.location.length > 0 ? `<span>&#128207; ${ev.location.lengthLabel}</span>` : ''}
+                ${ev.location && ev.location.length > 0 ? `<span>&#128207; ${escHtml(ev.location.lengthLabel)}</span>` : ''}
                 ${ev.organization && ev.organization.name ? `<span>&#127970; ${escHtml(ev.organization.name)}</span>` : ''}
             </div>
         `;
@@ -171,7 +171,7 @@ function renderSessionGroup(name, sessions) {
                 <div class="session-item" data-session-id="${s.id}" data-session-name="${escAttr(s.name)}">
                     <div>
                         <span class="session-name">${escHtml(s.name)}</span>
-                        <span class="session-type ${s.type}">${escHtml(s.type)}</span>
+                        <span class="session-type ${escAttr(s.type)}">${escHtml(s.type)}</span>
                         ${s.startTime ? `<span class="event-meta-item" style="margin-left:0.75rem"><span class="icon">&#128336;</span> ${formatDateTime(s.startTime)}</span>` : ''}
                     </div>
                     <span class="session-arrow">&#8250;</span>
