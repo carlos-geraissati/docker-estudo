@@ -115,7 +115,7 @@ async function loadEvent(eventId) {
             <div class="meta-row">
                 <span class="sport-badge ${sportClass(ev.sport)}">${escHtml(ev.sport)}</span>
                 <span>&#128197; ${formatDate(ev.startDate)}</span>
-                ${ev.location ? `<span>&#128205; ${escHtml(ev.location.name)} ${ev.location.country ? '(' + ev.location.country.name + ')' : ''}</span>` : ''}
+                ${ev.location ? `<span>&#128205; ${escHtml(ev.location.name)} ${ev.location.country ? '(' + escHtml(ev.location.country.name) + ')' : ''}</span>` : ''}
                 ${ev.location && ev.location.length > 0 ? `<span>&#128207; ${ev.location.lengthLabel}</span>` : ''}
                 ${ev.organization && ev.organization.name ? `<span>&#127970; ${escHtml(ev.organization.name)}</span>` : ''}
             </div>
@@ -317,7 +317,7 @@ async function loadLapData(sessionId, finishPosition, driverName) {
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Consist\u00eancia</div>
-                    <div class="stat-value">${calcConsistency(laps)}%</div>
+                    <div class="stat-value">${(() => { const c = calcConsistency(laps); return c === '-' ? '-' : c + '%'; })()}</div>
                 </div>
             </div>
         `;
@@ -515,7 +515,7 @@ function escHtml(str) {
 
 function escAttr(str) {
     if (!str) return '';
-    return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
 
 // Expose functions globally
