@@ -76,7 +76,7 @@ async function loadEvents() {
         }
 
         container.innerHTML = events.map(ev => `
-            <div class="event-card" onclick="loadEvent(${ev.id})">
+            <div class="event-card" data-event-id="${ev.id}">
                 <div class="event-name">${escHtml(ev.name)}</div>
                 <div class="event-meta">
                     <span class="sport-badge ${sportClass(ev.sport)}">${escHtml(ev.sport)}</span>
@@ -87,6 +87,10 @@ async function loadEvents() {
                 </div>
             </div>
         `).join('');
+
+        container.querySelectorAll('.event-card').forEach(el => {
+            el.addEventListener('click', () => loadEvent(parseInt(el.dataset.eventId)));
+        });
 
         updatePagination(events.length);
     } catch (err) {
@@ -147,6 +151,12 @@ async function loadEvent(eventId) {
         }
 
         listEl.innerHTML = html || '<div class="empty-state"><p>Nenhuma sess\u00e3o encontrada.</p></div>';
+
+        listEl.querySelectorAll('.session-item').forEach(el => {
+            el.addEventListener('click', () => {
+                loadClassification(parseInt(el.dataset.sessionId), el.dataset.sessionName);
+            });
+        });
     } catch (err) {
         listEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar sess\u00f5es: ${err.message}</p></div>`;
     }
@@ -158,7 +168,7 @@ function renderSessionGroup(name, sessions) {
         <div class="session-group">
             <div class="session-group-header">&#127937; ${escHtml(name)}</div>
             ${sessions.map(s => `
-                <div class="session-item" onclick="loadClassification(${s.id}, '${escAttr(s.name)}')">
+                <div class="session-item" data-session-id="${s.id}" data-session-name="${escAttr(s.name)}">
                     <div>
                         <span class="session-name">${escHtml(s.name)}</span>
                         <span class="session-type ${s.type}">${escHtml(s.type)}</span>
@@ -236,7 +246,7 @@ async function loadClassification(sessionId, sessionName) {
                 </thead>
                 <tbody>
                     ${data.rows.map(row => `
-                        <tr onclick="loadLapData(${sessionId}, ${row.position}, '${escAttr(row.name)}')">
+                        <tr data-session-id="${sessionId}" data-position="${row.position}" data-driver-name="${escAttr(row.name)}">
                             <td class="position-cell ${row.position <= 3 ? 'p' + row.position : ''}">${row.position}</td>
                             <td class="driver-name">${escHtml(row.name)}</td>
                             <td>${escHtml(row.startNumber || '')}</td>
@@ -251,6 +261,16 @@ async function loadClassification(sessionId, sessionName) {
                 </tbody>
             </table>
         `;
+
+        tableEl.querySelectorAll('.results-table tbody tr').forEach(el => {
+            el.addEventListener('click', () => {
+                loadLapData(
+                    parseInt(el.dataset.sessionId),
+                    parseInt(el.dataset.position),
+                    el.dataset.driverName
+                );
+            });
+        });
     } catch (err) {
         tableEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar classifica\u00e7\u00e3o: ${err.message}</p></div>`;
     }
@@ -360,7 +380,7 @@ async function loadLapData(sessionId, finishPosition, driverName) {
                                 <td class="position ${pos === 1 ? 'p1' : ''}">${pos !== null ? 'P' + pos : '-'}</td>
                                 <td>${lap.fieldComparison && lap.fieldComparison.gapAhead ? lap.fieldComparison.gapAhead.time : '-'}</td>
                                 <td>${lap.fieldComparison && lap.fieldComparison.gapBehind ? lap.fieldComparison.gapBehind.time : '-'}</td>
-                                <td>${lap.status ? lap.status.map(s => `<span class="status-${s.toLowerCase()}">${s}</span>`).join(' ') : '-'}</td>
+                                <td>${lap.status ? lap.status.map(s => `<span class="status-${escAttr(s.toLowerCase())}">${escHtml(s)}</span>`).join(' ') : '-'}</td>
                             </tr>
                         `;
                     }).join('')}
@@ -520,9 +540,6 @@ function escAttr(str) {
 }
 
 // Expose functions globally
-window.loadEvent = loadEvent;
-window.loadClassification = loadClassification;
-window.loadLapData = loadLapData;
 window.showView = showView;
 window.goBackToSessions = goBackToSessions;
 window.goBackToClassification = goBackToClassification;
