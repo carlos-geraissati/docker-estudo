@@ -289,8 +289,9 @@ async function loadLapData(sessionId, finishPosition, driverName) {
             }
         }
 
-        const avgTime = laps.length > 1
-            ? (laps.slice(1).reduce((s, l) => s + parseLapTime(l.lapTime), 0) / (laps.length - 1))
+        const validTimes = laps.filter(l => l.lapNr > 1).map(l => parseLapTime(l.lapTime)).filter(t => t > 0);
+        const avgTime = validTimes.length > 0
+            ? (validTimes.reduce((s, t) => s + t, 0) / validTimes.length)
             : 0;
 
         headerEl.innerHTML = `
@@ -515,7 +516,7 @@ function escHtml(str) {
 
 function escAttr(str) {
     if (!str) return '';
-    return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    return str.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // Expose functions globally
