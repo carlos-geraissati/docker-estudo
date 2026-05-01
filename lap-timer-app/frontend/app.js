@@ -67,6 +67,7 @@ async function loadEvents() {
 
     try {
         const resp = await fetch(`${API_BASE}/api/events?${params}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const events = await resp.json();
 
         if (!events.length) {
@@ -111,6 +112,7 @@ async function loadEvent(eventId) {
 
     try {
         const resp = await fetch(`${API_BASE}/api/events/${eventId}?sessions=true`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const ev = await resp.json();
         currentEventName = ev.name;
 
@@ -195,6 +197,7 @@ async function loadClassification(sessionId, sessionName) {
 
     try {
         const resp = await fetch(`${API_BASE}/api/sessions/${sessionId}/classification`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
 
         headerEl.innerHTML = `
@@ -293,6 +296,7 @@ async function loadLapData(sessionId, finishPosition, driverName) {
 
     try {
         const resp = await fetch(`${API_BASE}/api/sessions/${sessionId}/lapdata/${finishPosition}/laps`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
 
         const info = data.lapDataInfo;
