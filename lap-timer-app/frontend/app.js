@@ -7,6 +7,8 @@ let currentSessionId = null;
 let currentSessionName = '';
 let currentEventName = '';
 let lapChart = null;
+let comparisonChart = null;
+let selectedDrivers = [];
 
 // --- Navigation ---
 
@@ -232,10 +234,17 @@ async function loadClassification(sessionId, sessionName) {
             return;
         }
 
+        selectedDrivers = [];
+
         tableEl.innerHTML = `
+            <div class="compare-bar" id="compare-bar">
+                <span id="compare-count">0 pilotos selecionados</span>
+                <button class="btn-compare" id="btn-compare" disabled>&#128200; Comparar Pilotos</button>
+            </div>
             <table class="results-table">
                 <thead>
                     <tr>
+                        <th class="checkbox-col">&#9745;</th>
                         <th>Pos</th>
                         <th>Piloto</th>
                         <th>N&uacute;m</th>
@@ -250,6 +259,7 @@ async function loadClassification(sessionId, sessionName) {
                 <tbody>
                     ${data.rows.map(row => `
                         <tr data-session-id="${sessionId}" data-position="${row.position}" data-driver-name="${escAttr(row.name)}">
+                            <td class="checkbox-col"><input type="checkbox" class="driver-checkbox" data-position="${row.position}" data-driver-name="${escAttr(row.name)}" data-best-time="${escAttr(row.bestTime || '')}" data-laps="${row.numberOfLaps}" data-speed="${row.bestSpeed || 0}"></td>
                             <td class="position-cell ${row.position <= 3 ? 'p' + row.position : ''}">${row.position}</td>
                             <td class="driver-name">${escHtml(row.name)}</td>
                             <td>${escHtml(row.startNumber || '')}</td>
@@ -264,6 +274,15 @@ async function loadClassification(sessionId, sessionName) {
                 </tbody>
             </table>
         `;
+
+        tableEl.querySelectorAll('.driver-checkbox').forEach(cb => {
+            cb.addEventListener('click', (e) => e.stopPropagation());
+            cb.addEventListener('change', () => updateDriverSelection());
+        });
+
+        document.getElementById('btn-compare').addEventListener('click', () => {
+            loadComparison(currentSessionId, selectedDrivers);
+        });
 
         tableEl.querySelectorAll('.results-table tbody tr').forEach(el => {
             el.addEventListener('click', () => {
@@ -394,6 +413,254 @@ async function loadLapData(sessionId, finishPosition, driverName) {
     } catch (err) {
         tableEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar tempos de volta: ${escHtml(err.message)}</p></div>`;
     }
+}
+
+// --- Driver Selection for Comparison ---
+
+function updateDriverSelection() {
+    selectedDrivers = [];
+    document.querySelectorAll('.driver-checkbox:checked').forEach(cb => {
+        selectedDrivers.push({
+            position: parseInt(cb.dataset.position),
+            name: cb.dataset.driverName,
+            bestTime: cb.dataset.bestTime,
+            laps: parseInt(cb.dataset.laps),
+            speed: parseFloat(cb.dataset.speed)
+        });
+    });
+
+    const countEl = document.getElementById('compare-count');
+    const btnEl = document.getElementById('btn-compare');
+    countEl.textContent = `${selectedDrivers.length} piloto${selectedDrivers.length !== 1 ? 's' : ''} selecionado${selectedDrivers.length !== 1 ? 's' : ''}`;
+    btnEl.disabled = selectedDrivers.length < 2;
+}
+
+// --- Driver Comparison ---
+
+const DRIVER_COLORS = [
+    { line: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' },
+    { line: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
+    { line: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' },
+    { line: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' },
+    { line: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)' },
+    { line: '#ec4899', bg: 'rgba(236, 72, 153, 0.15)' },
+    { line: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)' },
+    { line: '#84cc16', bg: 'rgba(132, 204, 22, 0.15)' },
+];
+
+async function loadComparison(sessionId, drivers) {
+    showView('comparison');
+
+    const headerEl = document.getElementById('comparison-header');
+    const statsEl = document.getElementById('comparison-stats');
+    const detailsEl = document.getElementById('comparison-details');
+
+    headerEl.innerHTML = `
+        <h2>&#128200; Compara\u00e7\u00e3o de Pilotos</h2>
+        <div style="color:var(--text-secondary); font-size:0.9rem;">${escHtml(currentEventName)} - ${escHtml(currentSessionName)}</div>
+    `;
+    statsEl.innerHTML = '<div class="loading">Carregando dados dos pilotos...</div>';
+    detailsEl.innerHTML = '';
+
+    if (comparisonChart) {
+        comparisonChart.destroy();
+        comparisonChart = null;
+    }
+
+    try {
+        const results = await Promise.all(
+            drivers.map(async (d) => {
+                const resp = await fetch(`${API_BASE}/api/sessions/${sessionId}/lapdata/${d.position}/laps`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                return { driver: d, info: data.lapDataInfo, laps: data.laps || [] };
+            })
+        );
+
+        const driverStats = results.map((r, idx) => {
+            const laps = r.laps.filter(l => l.lapNr > 1);
+            const times = laps.map(l => parseLapTime(l.lapTime)).filter(t => t > 0);
+            const bestTime = times.length ? Math.min(...times) : 0;
+            const bestLapNr = bestTime > 0 ? laps.find(l => parseLapTime(l.lapTime) === bestTime)?.lapNr || '-' : '-';
+            const avgTime = times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+            const consistency = calcConsistency(r.laps);
+            const avgSpeed = laps.filter(l => l.speed > 0).length > 0
+                ? (laps.reduce((s, l) => s + (l.speed || 0), 0) / laps.filter(l => l.speed > 0).length)
+                : 0;
+            const color = DRIVER_COLORS[idx % DRIVER_COLORS.length];
+
+            return {
+                name: r.driver.name,
+                position: r.driver.position,
+                lapCount: r.info ? r.info.lapCount : r.laps.length,
+                bestTime,
+                bestLapNr,
+                avgTime,
+                consistency,
+                avgSpeed,
+                color,
+                laps: r.laps,
+                driverClass: r.info?.participantInfo?.class || ''
+            };
+        });
+
+        // Find overall best for highlighting
+        const overallBest = Math.min(...driverStats.filter(d => d.bestTime > 0).map(d => d.bestTime));
+
+        // Render stats cards side by side
+        statsEl.innerHTML = `
+            <div class="comparison-grid">
+                ${driverStats.map((d, i) => `
+                    <div class="comparison-card" style="border-top: 3px solid ${d.color.line}">
+                        <div class="comparison-driver-name" style="color: ${d.color.line}">
+                            <span class="comparison-pos">P${d.position}</span> ${escHtml(d.name)}
+                        </div>
+                        ${d.driverClass ? `<div class="comparison-class">${escHtml(d.driverClass)}</div>` : ''}
+                        <div class="comparison-stat-grid">
+                            <div class="comparison-stat">
+                                <div class="comparison-stat-label">Melhor Volta</div>
+                                <div class="comparison-stat-value ${d.bestTime === overallBest ? 'is-best' : ''}">${d.bestTime > 0 ? formatLapTimeFromSec(d.bestTime) : '-'}</div>
+                            </div>
+                            <div class="comparison-stat">
+                                <div class="comparison-stat-label">Volta #</div>
+                                <div class="comparison-stat-value">${d.bestLapNr}</div>
+                            </div>
+                            <div class="comparison-stat">
+                                <div class="comparison-stat-label">Voltas</div>
+                                <div class="comparison-stat-value">${d.lapCount}</div>
+                            </div>
+                            <div class="comparison-stat">
+                                <div class="comparison-stat-label">M\u00e9dia</div>
+                                <div class="comparison-stat-value">${d.avgTime > 0 ? formatLapTimeFromSec(d.avgTime) : '-'}</div>
+                            </div>
+                            <div class="comparison-stat">
+                                <div class="comparison-stat-label">Consist\u00eancia</div>
+                                <div class="comparison-stat-value">${d.consistency === '-' ? '-' : d.consistency + '%'}</div>
+                            </div>
+                            <div class="comparison-stat">
+                                <div class="comparison-stat-label">Vel. M\u00e9dia</div>
+                                <div class="comparison-stat-value">${d.avgSpeed > 0 ? d.avgSpeed.toFixed(1) + ' km/h' : '-'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Render overlaid chart
+        renderComparisonChart(driverStats);
+
+        // Render lap-by-lap detail table
+        const maxLaps = Math.max(...driverStats.map(d => d.laps.filter(l => l.lapNr > 1).length));
+        let tableRows = '';
+        for (let i = 0; i < maxLaps; i++) {
+            const lapNr = i + 2;
+            tableRows += `<tr><td class="lap-nr">${lapNr}</td>`;
+            for (const d of driverStats) {
+                const lap = d.laps.find(l => l.lapNr === lapNr);
+                if (lap) {
+                    const t = parseLapTime(lap.lapTime);
+                    const isBest = t > 0 && t === d.bestTime;
+                    tableRows += `
+                        <td class="lap-time ${isBest ? 'best-lap' : ''}">${escHtml(lap.lapTime)}</td>
+                        <td class="speed">${lap.speed ? lap.speed.toFixed(1) : '-'}</td>
+                    `;
+                } else {
+                    tableRows += '<td>-</td><td>-</td>';
+                }
+            }
+            tableRows += '</tr>';
+        }
+
+        detailsEl.innerHTML = `
+            <h3 style="color:var(--accent); font-family:'Orbitron',sans-serif; margin-bottom:1rem;">&#128202; Volta a Volta</h3>
+            <div class="comparison-table-wrap">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Volta</th>
+                            ${driverStats.map(d => `<th colspan="2" style="color: ${d.color.line}">${escHtml(d.name)}</th>`).join('')}
+                        </tr>
+                        <tr>
+                            <th></th>
+                            ${driverStats.map(() => '<th>Tempo</th><th>Vel.</th>').join('')}
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>
+        `;
+
+    } catch (err) {
+        statsEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar compara\u00e7\u00e3o: ${escHtml(err.message)}</p></div>`;
+    }
+}
+
+function renderComparisonChart(driverStats) {
+    const canvas = document.getElementById('comparison-chart');
+    const ctx = canvas.getContext('2d');
+
+    const maxLaps = Math.max(...driverStats.map(d => d.laps.filter(l => l.lapNr > 1).length));
+    const labels = Array.from({ length: maxLaps }, (_, i) => `V${i + 2}`);
+
+    const datasets = driverStats.map((d, idx) => {
+        const filteredLaps = d.laps.filter(l => l.lapNr > 1);
+        const times = labels.map((_, i) => {
+            const lap = filteredLaps[i];
+            if (!lap) return null;
+            const t = parseLapTime(lap.lapTime);
+            return t > 0 ? t : null;
+        });
+
+        return {
+            label: d.name,
+            data: times,
+            borderColor: d.color.line,
+            backgroundColor: d.color.bg,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: d.color.line,
+            fill: false,
+            tension: 0.2,
+            spanGaps: true
+        };
+    });
+
+    comparisonChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    labels: { color: '#9ca3af', font: { size: 12 }, usePointStyle: true }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return `${ctx.dataset.label}: ${ctx.raw !== null ? formatLapTimeFromSec(ctx.raw) : '-'}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#6b7280', font: { size: 10 } },
+                    grid: { color: 'rgba(55, 65, 81, 0.3)' }
+                },
+                y: {
+                    title: { display: true, text: 'Tempo (s)', color: '#9ca3af' },
+                    ticks: {
+                        color: '#9ca3af',
+                        callback: v => formatLapTimeFromSec(v)
+                    },
+                    grid: { color: 'rgba(55, 65, 81, 0.3)' }
+                }
+            }
+        }
+    });
 }
 
 // --- Chart ---

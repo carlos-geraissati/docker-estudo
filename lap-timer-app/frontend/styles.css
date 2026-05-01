@@ -642,6 +642,200 @@ main {
 .lap-table .status-yellow { color: var(--accent); }
 .lap-table .status-red { color: var(--danger); }
 
+/* Compare Bar */
+.compare-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+}
+
+#compare-count {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.btn-compare {
+    font-family: 'Inter', sans-serif;
+    padding: 0.6rem 1.5rem;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-compare:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+
+.btn-compare:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: var(--border);
+    color: var(--text-muted);
+}
+
+.checkbox-col {
+    width: 40px;
+    text-align: center;
+}
+
+.driver-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+
+/* Driver Comparison */
+.comparison-header {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.comparison-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.comparison-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+}
+
+.comparison-driver-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.comparison-pos {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.comparison-class {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.comparison-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.comparison-stat {
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.comparison-stat-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.comparison-stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 0.15rem;
+}
+
+.comparison-stat-value.is-best {
+    color: var(--accent);
+}
+
+.comparison-table-wrap {
+    overflow-x: auto;
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.comparison-table th {
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--accent);
+    white-space: nowrap;
+}
+
+.comparison-table td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    border-bottom: 1px solid rgba(55, 65, 81, 0.5);
+    white-space: nowrap;
+}
+
+.comparison-table .lap-nr {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-align: center;
+    width: 50px;
+}
+
+.comparison-table .lap-time {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.comparison-table .lap-time.best-lap {
+    color: var(--accent);
+    font-weight: 900;
+}
+
+.comparison-table .speed {
+    color: var(--success);
+    font-size: 0.75rem;
+}
+
+.comparison-details-container {
+    margin-top: 1.5rem;
+}
+
 /* Loading */
 .loading {
     text-align: center;
