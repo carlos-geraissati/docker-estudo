@@ -95,7 +95,7 @@ async function loadEvents() {
 
         updatePagination(events.length);
     } catch (err) {
-        container.innerHTML = `<div class="empty-state"><div class="icon">&#9888;</div><p>Erro ao carregar eventos: ${err.message}</p></div>`;
+        container.innerHTML = `<div class="empty-state"><div class="icon">&#9888;</div><p>Erro ao carregar eventos: ${escHtml(err.message)}</p></div>`;
     }
 }
 
@@ -160,7 +160,7 @@ async function loadEvent(eventId) {
             });
         });
     } catch (err) {
-        listEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar sess\u00f5es: ${err.message}</p></div>`;
+        listEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar sess\u00f5es: ${escHtml(err.message)}</p></div>`;
     }
 }
 
@@ -275,7 +275,7 @@ async function loadClassification(sessionId, sessionName) {
             });
         });
     } catch (err) {
-        tableEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar classifica\u00e7\u00e3o: ${err.message}</p></div>`;
+        tableEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar classifica\u00e7\u00e3o: ${escHtml(err.message)}</p></div>`;
     }
 }
 
@@ -392,7 +392,7 @@ async function loadLapData(sessionId, finishPosition, driverName) {
             </table>
         `;
     } catch (err) {
-        tableEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar tempos de volta: ${err.message}</p></div>`;
+        tableEl.innerHTML = `<div class="empty-state"><p>Erro ao carregar tempos de volta: ${escHtml(err.message)}</p></div>`;
     }
 }
 
