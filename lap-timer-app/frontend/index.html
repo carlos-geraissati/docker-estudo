@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lap Timer - Controle de Tempos de Volta</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">&#9201;</span>
+                <h1>LAP TIMER</h1>
+            </div>
+            <p class="subtitle">Controle de Tempos de Volta - SpeedHive / MyLaps</p>
+        </div>
+    </header>
+
+    <nav class="sport-nav">
+        <button class="sport-btn active" data-sport="">Todos</button>
+        <button class="sport-btn" data-sport="Karting">Kart</button>
+        <button class="sport-btn" data-sport="Car">Carro</button>
+        <button class="sport-btn" data-sport="Bike">Moto</button>
+        <button class="sport-btn" data-sport="MX">Motocross</button>
+    </nav>
+
+    <main>
+        <!-- Events List View -->
+        <section id="events-view" class="view active">
+            <div class="section-header">
+                <h2>Eventos Recentes</h2>
+                <div class="pagination-controls">
+                    <button id="prev-page" class="btn-pagination" disabled>&laquo; Anterior</button>
+                    <span id="page-info" class="page-info">P&aacute;gina 1</span>
+                    <button id="next-page" class="btn-pagination">Pr&oacute;ximo &raquo;</button>
+                </div>
+            </div>
+            <div id="events-list" class="events-grid">
+                <div class="loading">Carregando eventos...</div>
+            </div>
+        </section>
+
+        <!-- Event Detail / Sessions View -->
+        <section id="sessions-view" class="view">
+            <button class="btn-back" onclick="showView('events')">&#8592; Voltar aos Eventos</button>
+            <div id="event-header" class="event-detail-header"></div>
+            <div id="sessions-list" class="sessions-container">
+                <div class="loading">Carregando sess&otilde;es...</div>
+            </div>
+        </section>
+
+        <!-- Classification / Results View -->
+        <section id="classification-view" class="view">
+            <button class="btn-back" onclick="goBackToSessions()">&#8592; Voltar &agrave;s Sess&otilde;es</button>
+            <div id="classification-header" class="classification-header"></div>
+            <div id="classification-table" class="classification-container">
+                <div class="loading">Carregando resultados...</div>
+            </div>
+        </section>
+
+        <!-- Lap Data View -->
+        <section id="lapdata-view" class="view">
+            <button class="btn-back" onclick="goBackToClassification()">&#8592; Voltar &agrave; Classifica&ccedil;&atilde;o</button>
+            <div id="lapdata-header" class="lapdata-header"></div>
+            <div id="lap-chart-container" class="chart-container">
+                <canvas id="lap-chart"></canvas>
+            </div>
+            <div id="lapdata-table" class="lapdata-container">
+                <div class="loading">Carregando tempos de volta...</div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Dados fornecidos por <a href="https://speedhive.mylaps.com" target="_blank">SpeedHive / MyLaps</a></p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>
