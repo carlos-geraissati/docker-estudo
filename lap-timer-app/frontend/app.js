@@ -257,7 +257,7 @@ async function loadClassification(sessionId, sessionName) {
                             <td class="best-time-cell">${escHtml(row.bestTime || '-')}</td>
                             <td class="laps-cell">${row.numberOfLaps}</td>
                             <td class="total-time-cell">${escHtml(row.totalTime || '-')}</td>
-                            <td class="gap-cell">${row.difference && row.difference.timeDifference !== '00.000' ? '+' + row.difference.timeDifference : '-'}</td>
+                            <td class="gap-cell">${row.difference && row.difference.timeDifference !== '00.000' ? '+' + escHtml(row.difference.timeDifference) : '-'}</td>
                             <td class="speed-cell">${row.bestSpeed ? row.bestSpeed.toFixed(1) : '-'}</td>
                         </tr>
                     `).join('')}
@@ -379,11 +379,11 @@ async function loadLapData(sessionId, finishPosition, driverName) {
                             <tr>
                                 <td class="lap-nr">${lap.lapNr}</td>
                                 <td class="lap-time ${isBest ? 'best-lap' : ''} ${isFirst ? 'first-lap' : ''}">${escHtml(lap.lapTime)}</td>
-                                <td class="diff-best ${lap.diffWithBestLap === '0.000' ? 'zero' : ''}">${lap.diffWithBestLap === '0.000' ? 'BEST' : (lap.diffWithBestLap ? '+' + lap.diffWithBestLap : '-')}</td>
+                                <td class="diff-best ${lap.diffWithBestLap === '0.000' ? 'zero' : ''}">${lap.diffWithBestLap === '0.000' ? 'BEST' : (lap.diffWithBestLap ? '+' + escHtml(lap.diffWithBestLap) : '-')}</td>
                                 <td class="speed">${lap.speed ? lap.speed.toFixed(1) : '-'}</td>
                                 <td class="position ${pos === 1 ? 'p1' : ''}">${pos !== null ? 'P' + pos : '-'}</td>
-                                <td>${lap.fieldComparison && lap.fieldComparison.gapAhead ? lap.fieldComparison.gapAhead.time : '-'}</td>
-                                <td>${lap.fieldComparison && lap.fieldComparison.gapBehind ? lap.fieldComparison.gapBehind.time : '-'}</td>
+                                <td>${lap.fieldComparison && lap.fieldComparison.gapAhead ? escHtml(lap.fieldComparison.gapAhead.time) : '-'}</td>
+                                <td>${lap.fieldComparison && lap.fieldComparison.gapBehind ? escHtml(lap.fieldComparison.gapBehind.time) : '-'}</td>
                                 <td>${lap.status ? lap.status.map(s => `<span class="status-${escAttr(s.toLowerCase())}">${escHtml(s)}</span>`).join(' ') : '-'}</td>
                             </tr>
                         `;
